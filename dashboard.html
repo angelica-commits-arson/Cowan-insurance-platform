@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cowan Restoration Services | Field Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+
+    <!-- Top Navigation Bar (Logo Left, Profile Right) -->
+    <header class="top-nav">
+        <div class="nav-brand">
+            <i class="fa-solid fa-house-crack brand-icon"></i>
+            <span class="brand-title">COWAN RESTORATION SERVICES</span>
+        </div>
+
+        <div class="nav-actions">
+            <!-- Active Technician Profile Indicator (Far Right) -->
+            <div class="user-profile">
+                <div class="avatar" id="userAvatar">TC</div>
+                <div class="user-info">
+                    <span class="user-name" id="userName">Loading...</span>
+                    <span class="user-role" id="userRole">Field Technician</span>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <button type="button" id="logoutBtn" class="nav-btn btn-logout" title="Sign Out">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-menu">
+                <button class="nav-item active" data-target="overview">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard Overview</span>
+                </button>
+                <button class="nav-item" data-target="job-intake">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span>Job Intake Form</span>
+                </button>
+                <button class="nav-item" data-target="schedule">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>Technician Timetable</span>
+                </button>
+                <button class="nav-item" data-target="moisture-log">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span>Moisture & Psychrometrics</span>
+                </button>
+                <button class="nav-item" data-target="quotation">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Quotation & GST Engine</span>
+                </button>
+                <button class="nav-item" data-target="export">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Export Client Report</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p class="abn-text">Cowan Restoration Pty Ltd</p>
+                <p class="abn-text">ABN 12 345 678 901</p>
+            </div>
+        </aside>
+
+        <!-- Main Workspace View (Larger & Streamlined) -->
+        <main class="main-content">
+            
+            <!-- Dashboard Overview Section -->
+            <section id="section-overview" class="view-section">
+                <div class="page-header">
+                    <div>
+                        <h2>Field Operations Overview</h2>
+                        <p class="subtitle">Active restoration claims and property damage assessment status</p>
+                    </div>
+                    <button class="btn-primary" id="quickIntakeBtn">
+                        <i class="fa-solid fa-plus"></i> New Claim Assessment
+                    </button>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon icon-blue"><i class="fa-solid fa-folder-open"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-value">12</span>
+                            <span class="metric-label">Active Claims</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon icon-amber"><i class="fa-solid fa-droplet-slash"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-value">5</span>
+                            <span class="metric-label">Active Drying Jobs</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon icon-green"><i class="fa-solid fa-file-circle-check"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-value">8</span>
+                            <span class="metric-label">Completed Reports</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon icon-purple"><i class="fa-solid fa-truck-ramp-box"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-value">34</span>
+                            <span class="metric-label">Equipment Deployed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Jobs Table Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Recent Restoration Jobs</h3>
+                        <div class="table-search">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="searchJobs" placeholder="Search claims, clients, postcodes...">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Claim #</th>
+                                    <th>Client / Property</th>
+                                    <th>Location</th>
+                                    <th>Loss Category</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>CRS-2026-8841</strong></td>
+                                    <td>Highland Residential</td>
+                                    <td>Parramatta, NSW 2150</td>
+                                    <td><span class="tag tag-water">Category 2 Water</span></td>
+                                    <td><span class="status status-progress">Drying In Progress</span></td>
+                                    <td><button class="btn-sm">View Log</button></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CRS-2026-8839</strong></td>
+                                    <td>Commercial Warehouse</td>
+                                    <td>Southbank, VIC 3006</td>
+                                    <td><span class="tag tag-fire">Class 4 Structural Fire</span></td>
+                                    <td><span class="status status-pending">Pending Scope</span></td>
+                                    <td><button class="btn-sm">View Log</button></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CRS-2026-8822</strong></td>
+                                    <td>St. Jude Medical Suites</td>
+                                    <td>Fortitude Valley, QLD 4006</td>
+                                    <td><span class="tag tag-mould">Mould Remediation</span></td>
+                                    <td><span class="status status-completed">Report Finalised</span></td>
+                                    <td><button class="btn-sm">View Log</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-schedule" class="view-section hidden">
+                <div class="page-header">
+                    <div>
+                        <h2>Technician Timetable</h2>
+                        <p class="subtitle">Shared technician calendar, refreshed across authorised staff</p>
+                    </div>
+                    <button class="btn-primary" id="toggleScheduleForm" type="button" aria-expanded="false" aria-controls="scheduleForm">
+                        <i class="fa-solid fa-plus"></i> Schedule a Job
+                    </button>
+                </div>
+
+                <form id="scheduleForm" class="content-card schedule-form hidden">
+                    <h3>New Job Booking</h3>
+                    <div class="schedule-form-grid">
+                        <div class="schedule-field">
+                            <label for="scheduleJob">Job / claim</label>
+                            <input id="scheduleJob" name="job" type="text" maxlength="100" required>
+                        </div>
+                        <div class="schedule-field">
+                            <label for="scheduleTechnician">Technician</label>
+                            <input id="scheduleTechnician" name="technician" type="text" maxlength="80" required>
+                        </div>
+                        <div class="schedule-field">
+                            <label for="scheduleDate">Date</label>
+                            <input id="scheduleDate" name="date" type="date" required>
+                        </div>
+                        <div class="schedule-field">
+                            <label for="scheduleStart">Start time</label>
+                            <input id="scheduleStart" name="start" type="time" required>
+                        </div>
+                        <div class="schedule-field">
+                            <label for="scheduleEnd">End time</label>
+                            <input id="scheduleEnd" name="end" type="time" required>
+                        </div>
+                        <div class="schedule-field schedule-field-wide">
+                            <label for="scheduleLocation">Site address / location</label>
+                            <input id="scheduleLocation" name="location" type="text" maxlength="160" required>
+                        </div>
+                    </div>
+                    <div class="schedule-form-actions">
+                        <button class="btn-primary" type="submit">Save Booking</button>
+                        <button class="btn-sm" id="cancelSchedule" type="button">Cancel</button>
+                    </div>
+                </form>
+
+                <p id="scheduleNotice" class="schedule-notice hidden" role="status" aria-live="polite"></p>
+
+                <div class="content-card timetable-card">
+                    <div class="timetable-toolbar">
+                        <div class="week-navigation">
+                            <button class="btn-sm" id="previousWeek" type="button" aria-label="Previous week">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button class="btn-sm" id="currentWeek" type="button">This week</button>
+                            <button class="btn-sm" id="nextWeek" type="button" aria-label="Next week">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <h3 id="scheduleWeekLabel" aria-live="polite"></h3>
+                    </div>
+                    <div class="schedule-week-scroll">
+                        <div id="scheduleWeek" class="schedule-week" aria-label="Weekly technician timetable"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Placeholder Section for Other Modules -->
+            <section id="section-job-intake" class="view-section hidden">
+                <div class="page-header">
+                    <h2>Job Intake & Property Assessment</h2>
+                    <p class="subtitle">Australian client details, site address, and loss classification</p>
+                </div>
+                <div class="content-card placeholder-box">
+                    <i class="fa-solid fa-clipboard-list placeholder-icon"></i>
+                    <p>Job Intake module ready for configuration.</p>
+                </div>
+            </section>
+
+            <section id="section-moisture-log" class="view-section hidden">
+                <div class="page-header">
+                    <h2>Psychrometric & Moisture Mapping</h2>
+                    <p class="subtitle">Daily environmental and structural moisture meter tracking</p>
+                </div>
+                <div class="content-card placeholder-box">
+                    <i class="fa-solid fa-droplet placeholder-icon"></i>
+                    <p>Moisture tracking tables module coming up next.</p>
+                </div>
+            </section>
+
+            <section id="section-quotation" class="view-section hidden">
+                <div class="page-header">
+                    <h2>Itemised Quotation & Australian GST Engine</h2>
+                    <p class="subtitle">Line-item scopes and automatic 10% GST calculations</p>
+                </div>
+                <div class="content-card placeholder-box">
+                    <i class="fa-solid fa-calculator placeholder-icon"></i>
+                    <p>Quotation calculator module coming up next.</p>
+                </div>
+            </section>
+
+            <section id="section-export" class="view-section hidden">
+                <div class="page-header">
+                    <h2>Export Client Report</h2>
+                    <p class="subtitle">Generate print-ready executive summaries for insurance adjusters</p>
+                </div>
+                <div class="content-card placeholder-box">
+                    <i class="fa-solid fa-file-pdf placeholder-icon"></i>
+                    <p>Export & Print stylesheet module coming up next.</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
