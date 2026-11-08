@@ -10,10 +10,7 @@
       "database_id": "7e07e76d-b1fd-432e-86e5-a0e290577c77",
       "migrations_dir": "migrations"
     }
-  ]
-}
-{
-  // ...
+  ],
   "observability": {
     "logs": {
       "enabled": true,
@@ -26,6 +23,5 @@
       "head_sampling_rate": 1,
       "persist": true
     }
-  },
-  // ...
+  }
 }
