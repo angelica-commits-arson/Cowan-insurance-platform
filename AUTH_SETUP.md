@@ -8,6 +8,23 @@ The middleware protects the dashboard and application API routes. `/api/login`, 
 
 The code includes PBKDF2 password-hash verification, generic credential errors, origin checks, no-store responses, and a basic failed-login guard. Configure Cloudflare WAF/rate limits for `/api/login` as a second layer and review security controls before production use.
 
+## Where to find/create a D1 user
+
+In Cloudflare, open **Workers & Pages → D1 SQL Database → cowan-scheduler → Console**. The staff table is `users`; a safe account listing query that does not reveal hashes is:
+
+```sql
+SELECT id, email, name, active, created_at FROM users ORDER BY id;
+```
+
+To create a sample, first apply the auth migration and generate a unique hash locally. Never store a plaintext password or use a shared default. The `scripts/hash-password.mjs` helper reads the password from standard input and prints a PBKDF2 hash. Then run an insert in the D1 Console using a test email and that hash:
+
+```sql
+INSERT INTO users (email, name, password_hash)
+VALUES ('sample@example.invalid', 'Sample Staff', 'PASTE_LOCALLY_GENERATED_PBKDF2_HASH_HERE');
+```
+
+Replace the placeholder before executing; it is deliberately not a valid hash. The GitHub tools cannot access your Cloudflare account, so this record must be inserted in your D1 Console or through Wrangler with your Cloudflare credentials. Do not commit staff records, password hashes, or database exports to GitHub. Remove the sample with `DELETE FROM users WHERE email = 'sample@example.invalid';` when finished.
+
 ## Required deployment setup
 
 1. Apply migrations to the local and production D1 databases:
@@ -25,11 +42,7 @@ The code includes PBKDF2 password-hash verification, generic credential errors, 
    read -s -p 'Temporary staff password: ' PASSWORD; printf '\n'; HASH=$(printf '%s' "$PASSWORD" | node scripts/hash-password.mjs); unset PASSWORD
    ```
 
-   Insert only the generated hash into D1, replacing the example values. Do not commit the password or hash to GitHub:
-
-   ```sql
-   INSERT INTO users (email, name, password_hash) VALUES ('staff@example.com', 'Staff Name', 'pbkdf2_sha256$...');
-   ```
+   Insert only the generated hash into D1, replacing the example values. Do not commit the password or hash to GitHub.
 
 3. Deploy the Pages project with the `DB` binding configured to the intended D1 database. Test login, session persistence, logout, and protected page/API access over HTTPS. The `__Host-` cookie requires HTTPS.
 4. Disable staff by setting `active = 0`; revoke their sessions with `DELETE FROM auth_sessions WHERE user_id = ?`. Use an administrator-controlled reset process to issue a fresh hash if a password is forgotten.

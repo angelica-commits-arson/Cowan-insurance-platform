@@ -2,6 +2,27 @@
 
 This directory documents the safe, version-controlled mirror of the Cloudflare D1 database: **schema migrations and non-sensitive development fixtures only**. The production database itself, customer/job records, staff emails, password hashes, sessions, login-attempt records, and `.sqlite`/`.db` files must never be committed to GitHub.
 
+## Where to find the staff records in Cloudflare
+
+The configured D1 database is named `cowan-scheduler` (binding `DB`). In the Cloudflare dashboard, open **Workers & Pages → D1 SQL Database → cowan-scheduler → Console**. After applying `migrations/0002_auth.sql`, the staff table is named `users`. To inspect accounts without exposing password hashes, run:
+
+```sql
+SELECT id, email, name, active, created_at FROM users ORDER BY id;
+```
+
+The repository cannot write directly to your Cloudflare account. Create an example account in the Cloudflare D1 Console only after applying the migration and generating a password hash locally. The repository includes `scripts/hash-password.mjs`; it prompts for no data itself and accepts the password from standard input. Example (replace email/name with a non-production test identity you control, and paste in the generated hash):
+
+```sql
+INSERT INTO users (email, name, password_hash)
+VALUES ('sample@example.invalid', 'Sample Staff', 'PASTE_LOCALLY_GENERATED_PBKDF2_HASH_HERE');
+```
+
+The placeholder is intentionally not a valid hash; do not run the statement until replacing it. Do not use a shared/default password. For a test account that must be able to sign in, generate its unique password hash with the local script and insert the hash directly into the D1 Console. Do not commit the resulting hash or a real staff record to GitHub. You can remove the sample afterward with:
+
+```sql
+DELETE FROM users WHERE email = 'sample@example.invalid';
+```
+
 ## Schema source of truth
 
 - D1 binding and migration directory: `wrangler.jsonc`
