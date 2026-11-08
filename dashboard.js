@@ -1,8 +1,19 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            window.location.href = '/cdn-cgi/access/logout';
+        logoutBtn.addEventListener('click', async () => {
+            logoutBtn.disabled = true;
+            try {
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } finally {
+                // The server invalidates the session and expires the HttpOnly cookie.
+                window.location.replace('/index.html');
+            }
         });
     }
 
@@ -10,12 +21,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch('/api/me', { cache: 'no-store' });
         if (response.status === 401) {
-            window.location.href = 'index.html';
+            window.location.replace('/index.html');
             return;
         }
-        if (!response.ok) throw new Error('Unable to verify your Cloudflare Access session.');
+        if (!response.ok) throw new Error('Unable to verify your sign-in.');
         if (!response.headers.get('content-type')?.includes('application/json')) {
-            throw new Error('Your Cloudflare Access session could not be verified.');
+            throw new Error('The sign-in service returned an unexpected response.');
         }
         sessionData = await response.json();
     } catch (error) {
@@ -27,7 +38,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 2. Populate Technician Profile Header
     const userNameEl = document.getElementById('userName');
     const userRoleEl = document.getElementById('userRole');
     const userAvatarEl = document.getElementById('userAvatar');
@@ -35,11 +45,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const displayName = sessionData.name || sessionData.email || 'Technician';
     if (userNameEl) userNameEl.textContent = displayName;
     if (userRoleEl) userRoleEl.textContent = sessionData.email || 'Authorised staff';
-    
+
     if (userAvatarEl) {
         const initials = displayName
             .split(' ')
-            .map(n => n[0])
+            .map(name => name[0])
             .join('')
             .substring(0, 2)
             .toUpperCase();
@@ -53,23 +63,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     navItems.forEach(item => {
         item.addEventListener('click', () => {
             const targetSection = item.getAttribute('data-target');
-
-            // Update active nav button
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
-
-            // Show target section, hide others
             viewSections.forEach(section => {
-                if (section.id === `section-${targetSection}`) {
-                    section.classList.remove('hidden');
-                } else {
-                    section.classList.add('hidden');
-                }
+                section.classList.toggle('hidden', section.id !== `section-${targetSection}`);
             });
         });
     });
 
-    // Quick Intake Button from Overview card
     const quickIntakeBtn = document.getElementById('quickIntakeBtn');
     if (quickIntakeBtn) {
         quickIntakeBtn.addEventListener('click', () => {
@@ -83,17 +84,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const scheduleWeekLabel = document.getElementById('scheduleWeekLabel');
     const toggleScheduleForm = document.getElementById('toggleScheduleForm');
     const scheduleDateInput = document.getElementById('scheduleDate');
-    const dateFormatter = new Intl.DateTimeFormat('en-AU', {
-        day: 'numeric',
-        month: 'short'
-    });
-    const weekdayFormatter = new Intl.DateTimeFormat('en-AU', {
-        weekday: 'short'
-    });
-    const monthFormatter = new Intl.DateTimeFormat('en-AU', {
-        month: 'long',
-        year: 'numeric'
-    });
+    const dateFormatter = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short' });
+    const weekdayFormatter = new Intl.DateTimeFormat('en-AU', { weekday: 'short' });
+    const monthFormatter = new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' });
 
     let appointments = [];
     let scheduleLoadId = 0;
@@ -136,11 +129,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         if (response.status === 401) {
-            window.location.href = 'index.html';
+            window.location.replace('/index.html');
             throw new Error('Your sign-in could not be verified.');
         }
         if (!response.headers.get('content-type')?.includes('application/json')) {
-            window.location.href = 'index.html';
             throw new Error('The timetable API returned an unexpected response.');
         }
         const result = await response.json();
@@ -156,10 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const loadId = ++scheduleLoadId;
         const weekEnd = new Date(displayedWeek);
         weekEnd.setDate(weekEnd.getDate() + 6);
-        const query = new URLSearchParams({
-            from: toDateKey(displayedWeek),
-            to: toDateKey(weekEnd)
-        });
+        const query = new URLSearchParams({ from: toDateKey(displayedWeek), to: toDateKey(weekEnd) });
 
         try {
             const result = await scheduleRequest(`/api/schedule?${query}`);
@@ -170,9 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setScheduleControlsEnabled(true);
             return true;
         } catch (error) {
-            if (loadId === scheduleLoadId) {
-                showScheduleNotice(`Unable to load timetable: ${error.message}`, true);
-            }
+            if (loadId === scheduleLoadId) showScheduleNotice(`Unable to load timetable: ${error.message}`, true);
             return false;
         }
     }
@@ -180,8 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function formatTime(time) {
         const [hour, minute] = time.split(':').map(Number);
         const period = hour >= 12 ? 'pm' : 'am';
-        const displayHour = hour % 12 || 12;
-        return `${displayHour}:${String(minute).padStart(2, '0')}${period}`;
+        return `${hour % 12 || 12}:${String(minute).padStart(2, '0')}${period}`;
     }
 
     function renderSchedule() {
@@ -242,9 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 removeButton.addEventListener('click', async () => {
                     removeButton.disabled = true;
                     try {
-                        await scheduleRequest(`/api/schedule?id=${encodeURIComponent(appointment.id)}`, {
-                            method: 'DELETE'
-                        });
+                        await scheduleRequest(`/api/schedule?id=${encodeURIComponent(appointment.id)}`, { method: 'DELETE' });
                         if (await refreshSchedule()) showScheduleNotice('Booking removed.');
                     } catch (error) {
                         showScheduleNotice(`Unable to remove booking: ${error.message}`, true);
@@ -254,7 +238,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 booking.append(time, job, technician, location, removeButton);
                 dayColumn.append(booking);
             });
-
             scheduleWeek.append(dayColumn);
         }
     }
@@ -268,9 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     scheduleDateInput.min = toDateKey(new Date());
     setScheduleControlsEnabled(false);
     scheduleWeek.setAttribute('aria-busy', 'true');
-    refreshSchedule().then(() => {
-        scheduleWeek.setAttribute('aria-busy', 'false');
-    });
+    refreshSchedule().finally(() => scheduleWeek.setAttribute('aria-busy', 'false'));
 
     toggleScheduleForm.addEventListener('click', () => {
         const isOpening = scheduleForm.classList.contains('hidden');
@@ -300,19 +281,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             showScheduleNotice('Complete all booking fields before saving.', true);
             return;
         }
-
         if (booking.end <= booking.start) {
             showScheduleNotice('End time must be later than start time.', true);
             return;
         }
-
         const hasConflict = appointments.some(appointment =>
             appointment.date === booking.date &&
             appointment.technician.toLocaleLowerCase() === booking.technician.toLocaleLowerCase() &&
-            booking.start < appointment.end &&
-            booking.end > appointment.start
+            booking.start < appointment.end && booking.end > appointment.start
         );
-
         if (hasConflict) {
             showScheduleNotice('This technician already has a booking during that time.', true);
             return;
@@ -321,25 +298,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         isSavingBooking = true;
         scheduleForm.querySelector('button[type="submit"]').disabled = true;
         try {
-            await scheduleRequest('/api/schedule', {
-                method: 'POST',
-                body: JSON.stringify(booking)
-            });
+            await scheduleRequest('/api/schedule', { method: 'POST', body: JSON.stringify(booking) });
             displayedWeek = getMonday(new Date(`${booking.date}T00:00:00`));
             scheduleForm.reset();
             scheduleDateInput.value = booking.date;
             closeScheduleForm();
-            const loaded = await refreshSchedule();
-            if (loaded) showScheduleNotice('Job booking saved.');
+            if (await refreshSchedule()) showScheduleNotice('Job booking saved.');
         } catch (error) {
             if (error.status === 409) {
                 const refreshed = await refreshSchedule();
                 showScheduleNotice(refreshed
                     ? error.message
                     : `${error.message} Timetable refresh failed; reload the page to see current bookings.`, true);
-                return;
+            } else {
+                showScheduleNotice(`Unable to save booking: ${error.message}`, true);
             }
-            showScheduleNotice(`Unable to save booking: ${error.message}`, true);
         } finally {
             isSavingBooking = false;
             setScheduleControlsEnabled(true);
@@ -350,12 +323,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayedWeek.setDate(displayedWeek.getDate() - 7);
         refreshSchedule();
     });
-
     document.getElementById('nextWeek').addEventListener('click', () => {
         displayedWeek.setDate(displayedWeek.getDate() + 7);
         refreshSchedule();
     });
-
     document.getElementById('currentWeek').addEventListener('click', () => {
         displayedWeek = getMonday(new Date());
         refreshSchedule();

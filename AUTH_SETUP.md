@@ -1,41 +1,39 @@
 # Staff sign-in setup and operations
 
-## What the sign-in patch does
+## Authentication model
 
-- Adds an email/password form to the portal and redirects to the technician dashboard only after the server accepts credentials.
-- Stores password hashes and hashed session tokens in D1; the raw password and session token are never written to browser storage.
-- Sets a Secure, HttpOnly, SameSite=Strict session cookie with a 12-hour lifetime.
-- Requires a valid database-backed session for `dashboard.html` and other protected pages/API routes. `/api/login`, `/api/me`, and `/api/logout` are the deliberate exceptions; each handler validates what it needs.
-- Applies a 20-failure/15-minute per-source-IP guard, generic credential errors, origin checks on login/logout, no-store responses, and baseline security response headers.
+The application uses one app-managed authentication system: staff email/password credentials are checked by Cloudflare Pages Functions against user records in D1. A successful login creates a random server-side session and sets a Secure, HttpOnly, SameSite=Strict cookie. The browser does not store passwords or session tokens. Cloudflare Access is not used as the app identity source; if the organization keeps Access in front as an additional network gate, it is an outer layer, not a second application login.
+
+The middleware protects the dashboard and application API routes. `/api/login`, `/api/me`, and `/api/logout` are the intentionally public auth endpoints; those handlers perform their own checks. Logout invalidates the D1 session and expires the cookie.
+
+The code includes PBKDF2 password-hash verification, generic credential errors, origin checks, no-store responses, and a basic failed-login guard. Configure Cloudflare WAF/rate limits for `/api/login` as a second layer and review security controls before production use.
 
 ## Required deployment setup
 
-1. Run the existing and new D1 migrations against both local and production databases. The repository currently has a `migrations_dir` configured; make sure the older schedule schema migration exists in your actual branch/deployment, since only the new auth migration is added here.
+1. Apply migrations to the local and production D1 databases:
 
    ```sh
    npx wrangler d1 migrations apply cowan-scheduler --local
    npx wrangler d1 migrations apply cowan-scheduler --remote
    ```
 
-2. Create each authorized staff user through a trusted administrator process. No public registration or password-reset endpoint is included. Generate a password hash locally (Node.js 18+):
+   Confirm the schedule schema exists too. The repository did not include its existing timetable schema migration, even though the UI calls `/api/schedule`; the auth migration is not a replacement for it.
+
+2. Create each authorized staff user through a trusted administrator process. There is no public registration or password-reset endpoint. Generate a password hash locally (Node.js 18+); enter the password interactively so it is not embedded in source or passed as an argument:
 
    ```sh
    read -s -p 'Temporary staff password: ' PASSWORD; printf '\n'; HASH=$(printf '%s' "$PASSWORD" | node scripts/hash-password.mjs); unset PASSWORD
    ```
 
-   Insert only the generated hash into D1, substituting a real staff email, display name, and the generated hash. Do not commit the hash or password into the repository:
+   Insert only the generated hash into D1, replacing the example values. Do not commit the password or hash to GitHub:
 
    ```sql
    INSERT INTO users (email, name, password_hash) VALUES ('staff@example.com', 'Staff Name', 'pbkdf2_sha256$...');
    ```
 
-   Apply the statement using the Cloudflare dashboard or a securely managed Wrangler D1 command. Do not enable public user self-registration.
+3. Deploy the Pages project with the `DB` binding configured to the intended D1 database. Test login, session persistence, logout, and protected page/API access over HTTPS. The `__Host-` cookie requires HTTPS.
+4. Disable staff by setting `active = 0`; revoke their sessions with `DELETE FROM auth_sessions WHERE user_id = ?`. Use an administrator-controlled reset process to issue a fresh hash if a password is forgotten.
 
-3. Deploy the Pages project with Functions enabled and ensure the `DB` binding points at the same D1 database. Test the authentication endpoints over HTTPS; the `__Host-` cookie intentionally requires a secure HTTPS origin.
-4. Add Cloudflare WAF/rate limiting for `/api/login` as a second layer. The D1 attempt counter is application-level protection, not a substitute for edge rate limits. Monitor failed logins and prune old `login_attempts`/expired `auth_sessions` periodically.
-5. Keep Cloudflare Access in front of the portal if it is already part of the organization’s access policy. This patch provides app-managed credentials and does not implement Cloudflare Access JWT verification. Do not treat an unverified Access header as identity.
-6. Configure account recovery and staff offboarding operationally: set `active = 0` to disable a user, revoke their sessions with `DELETE FROM auth_sessions WHERE user_id = ?`, and have an administrator issue a new password hash when needed.
+## Safe GitHub mirror
 
-## Important integration note
-
-The checked-in repository did not contain the existing `/api/schedule` or other timetable API handlers even though the browser code calls them. The middleware protects those API paths using the new session cookie, but each deployed handler must still use the same D1 binding and must not bypass authentication. Validate the full timetable workflow in the deployed Pages environment before rollout.
+GitHub contains the database **schema migrations**, not a copy of the live D1 records. See `database/README.md`. Do not commit a D1 dump, production records, personal information, password hashes, sessions, or login-attempt history. The current repository also needs its schedule schema located and added as a migration before the checked-in migrations can reconstruct the full application schema.
