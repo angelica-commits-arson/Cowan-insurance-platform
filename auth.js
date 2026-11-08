@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // The server sets an HttpOnly session cookie; do not put credentials or tokens in browser storage.
-            setStatus('Sign-in successful. Opening the technician timetable…', 'success');
+            setStatus('Sign-in successful.', 'success');
             window.location.assign('dashboard.html');
         } catch (error) {
             setStatus(error.message || 'Unable to sign in. Please try again.', 'error');
