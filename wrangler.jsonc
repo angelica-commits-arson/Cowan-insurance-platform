@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cowan-technician-timetable",
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2026-11-04",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cowan-scheduler",
+      "database_id": "7e07e76d-b1fd-432e-86e5-a0e290577c77",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
