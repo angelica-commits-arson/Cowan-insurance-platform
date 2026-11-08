@@ -8,35 +8,53 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="auth-body">
-
-    <div class="auth-container">
-        <!-- Brand / Header Section -->
-        <div class="auth-header">
+    <main class="auth-container">
+        <header class="auth-header">
             <div class="brand-logo">
-                <i class="fa-solid fa-house-crack brand-icon"></i>
+                <i class="fa-solid fa-house-crack brand-icon" aria-hidden="true"></i>
             </div>
             <h1>COWAN RESTORATION SERVICES</h1>
-            <p class="subtitle">Property Damage & Restoration Portal</p>
-        </div>
+            <p class="subtitle">Property Damage &amp; Restoration Portal</p>
+        </header>
 
-        <div class="auth-form">
+        <section class="auth-form" aria-label="Staff sign in">
             <p id="authStatus" class="auth-alert" role="status" aria-live="polite">
-                Checking your Cloudflare Access sign-in…
+                Checking your sign-in…
             </p>
+
+            <form id="loginForm" class="login-form" autocomplete="on">
+                <div class="form-group">
+                    <label for="email">Work email</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-envelope input-icon" aria-hidden="true"></i>
+                        <input id="email" name="email" type="email" autocomplete="username" inputmode="email" maxlength="254" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon" aria-hidden="true"></i>
+                        <input id="password" name="password" type="password" autocomplete="current-password" required>
+                    </div>
+                </div>
+                <button id="loginButton" type="submit" class="btn-primary btn-block">
+                    <span>Sign In</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
+            </form>
+
             <a id="dashboardLink" class="btn-primary btn-block hidden" href="dashboard.html">
                 <span>Open Technician Timetable</span>
-                <i class="fa-solid fa-arrow-right"></i>
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
             </a>
-        </div>
+        </section>
 
-        <!-- Portal Footer Info -->
-        <div class="auth-footer">
-            <p><i class="fa-solid fa-shield-halved"></i> Sign-in is managed by Cloudflare Access</p>
+        <footer class="auth-footer">
+            <p><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Sign-in is verified securely by Cowan staff authentication</p>
             <span class="abn-text">Cowan Restoration Services Pty Ltd | ABN 12 345 678 901</span>
-        </div>
-    </div>
+        </footer>
+    </main>
 
-    <script src="js/auth.js"></script>
+    <script src="auth.js" defer></script>
 </body>
 </html>
-
